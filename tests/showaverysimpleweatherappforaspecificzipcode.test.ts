@@ -1,56 +1,37 @@
 ```typescript
 import axios from 'axios';
-import { fetchWeatherData } from './fetchWeatherData';
+import { showWeatherApp } from './weatherApp';
 
 jest.mock('axios');
 
-describe('fetchWeatherData', () => {
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-  it('should fetch weather data successfully', async () => {
-    const mockData = {
-      current: {
-        temp_c: 20,
-        humidity: 80,
-        wind_kph: 10,
+describe('showWeatherApp', () => {
+  it('returns weather data for a given zip code', async () => {
+    mockedAxios.get.mockResolvedValueOnce({
+      data: {
+        current: {
+          temp_c: 20,
+          humidity: 80,
+          wind_kph: 10,
+        },
       },
-    };
-
-    mockedAxios.get.mockResolvedValueOnce({
-      status: 200,
-      data: mockData,
     });
 
-    const zipCode = '12345';
-    const result = await fetchWeatherData(zipCode);
+    const result = await showWeatherApp('90210');
 
-    expect(result).toEqual({
-      temperature: mockData.current.temp_c,
-      humidity: mockData.current.humidity,
-      windSpeed: mockData.current.wind_kph,
-    });
-    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+    expect(result).toBe('The current temperature is 20°C, the humidity is 80%, and the wind speed is 10 kph.');
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=90210');
   });
 
-  it('should throw an error when the response status is not 200', async () => {
-    mockedAxios.get.mockResolvedValueOnce({
-      status: 404,
-      data: {},
-    });
-
-    const zipCode = '12345';
-
-    await expect(fetchWeatherData(zipCode)).rejects.toThrow('Failed to fetch weather data');
-    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
-  });
-
-  it('should throw an error when the request fails', async () => {
+  it('handles errors when fetching weather data', async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('Network error'));
 
-    const zipCode = '12345';
+    const result = await showWeatherApp('90210');
 
-    await expect(fetchWeatherData(zipCode)).rejects.toThrow('Network error');
-    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+    expect(result).toBe('An error occurred: Failed to fetch weather data: Network error');
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=90210');
   });
 });
 ```
+This Jest test suite contains two tests. The first test mocks a successful API response and checks if the function returns the correct message. The second test mocks an API error and checks if the function handles the error correctly. The `axios.get` method is mocked to prevent actual HTTP requests during testing.

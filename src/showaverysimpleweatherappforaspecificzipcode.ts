@@ -2,42 +2,53 @@
 import axios from 'axios';
 
 /**
- * Interface for the weather data response
+ * Type for weather data response
  */
-interface IWeatherData {
+interface WeatherData {
   temperature: number;
   humidity: number;
   windSpeed: number;
 }
 
 /**
- * Function to fetch weather data for a specific zip code
- * @param {string} zipCode - The zip code for which to fetch the weather data
- * @returns {Promise<IWeatherData>} - A promise that resolves to the weather data
+ * Fetches weather data for a given zip code
+ * @param {string} zipCode - The zip code for which to fetch weather data
+ * @returns {Promise<WeatherData>} - The weather data for the given zip code
+ * @throws {Error} - Throws an error if the request fails
  */
-async function fetchWeatherData(zipCode: string): Promise<IWeatherData> {
+async function fetchWeatherData(zipCode: string): Promise<WeatherData> {
   try {
     // Replace with your actual weather API endpoint and API key
     const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
 
-    if (response.status !== 200) {
-      throw new Error('Failed to fetch weather data');
-    }
+    // Assuming the API response has a structure like this
+    const { temp_c, humidity, wind_kph } = response.data.current;
 
-    const data = response.data;
-
-    const weatherData: IWeatherData = {
-      temperature: data.current.temp_c,
-      humidity: data.current.humidity,
-      windSpeed: data.current.wind_kph,
+    const weatherData: WeatherData = {
+      temperature: temp_c,
+      humidity: humidity,
+      windSpeed: wind_kph,
     };
 
     return weatherData;
   } catch (error) {
-    console.error(`Error fetching weather data: ${error}`);
-    throw error;
+    throw new Error(`Failed to fetch weather data: ${error.message}`);
+  }
+}
+
+/**
+ * Shows a simple weather app for a specific zip code
+ * @param {string} zipCode - The zip code for which to show weather data
+ * @returns {Promise<string>} - A message showing the weather data
+ */
+export async function showWeatherApp(zipCode: string): Promise<string> {
+  try {
+    const weatherData = await fetchWeatherData(zipCode);
+
+    return `The current temperature is ${weatherData.temperature}°C, the humidity is ${weatherData.humidity}%, and the wind speed is ${weatherData.windSpeed} kph.`;
+  } catch (error) {
+    return `An error occurred: ${error.message}`;
   }
 }
 ```
-
-Note: This function assumes that you are using a weather API that returns the current temperature, humidity, and wind speed in the response. You would need to replace the API endpoint and API key with your actual values. Also, you need to handle the API key securely.
+Please note that you need to replace `YOUR_API_KEY` with your actual API key from the weather API you are using. Also, the structure of the API response may vary depending on the API, so you may need to adjust the destructuring of `response.data.current`.
