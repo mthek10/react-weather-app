@@ -1,42 +1,48 @@
 ```typescript
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 /**
- * @interface WeatherResponse
- * @description Interface for the weather response object
+ * Interface for the response object
  */
-interface WeatherResponse {
+interface IWeatherResponse {
   location: string;
   temperature: number;
   condition: string;
 }
 
 /**
- * @function getWeatherForecast
- * @description Fetches the weather forecast for a given zipcode
- * @param {string} zipcode - The zipcode for which to fetch the weather forecast
- * @returns {Promise<WeatherResponse>} The weather forecast for the given zipcode
+ * Fetches the weather forecast for a given zipcode.
+ * 
+ * @param {string} zipcode - The zipcode for which to fetch the weather forecast.
+ * @returns {Promise<IWeatherResponse>} The weather forecast for the given zipcode.
+ * 
+ * @throws {Error} When the API request fails.
  */
-async function getWeatherForecast(zipcode: string): Promise<WeatherResponse> {
+async function fetchWeatherForecast(zipcode: string): Promise<IWeatherResponse> {
   try {
-    // Make a GET request to a hypothetical weather API
-    const response: AxiosResponse = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
+    // Replace with your actual API endpoint and API key
+    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipcode}`);
 
-    // Extract the necessary data from the response
-    const { location, current } = response.data;
+    // Check if the response is successful
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch the weather forecast.');
+    }
 
-    // Construct the response object
-    const weatherResponse: WeatherResponse = {
-      location: location.name,
-      temperature: current.temp_c,
-      condition: current.condition.text,
+    // Extract the required data from the response
+    const data = response.data;
+    const location = data.location.name;
+    const temperature = data.current.temp_c;
+    const condition = data.current.condition.text;
+
+    // Return the meaningful response object
+    return {
+      location,
+      temperature,
+      condition
     };
-
-    return weatherResponse;
   } catch (error) {
-    // Basic error handling
-    console.error(`Failed to fetch weather forecast for zipcode ${zipcode}: `, error);
-    throw error;
+    console.error(error);
+    throw new Error('Failed to fetch the weather forecast.');
   }
 }
 ```

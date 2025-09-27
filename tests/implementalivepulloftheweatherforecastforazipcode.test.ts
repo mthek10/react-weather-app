@@ -1,38 +1,57 @@
 ```typescript
 import axios from 'axios';
-import { getWeatherForecast } from './weather'; // Assuming the function is exported from a file called weather.ts
+import { fetchWeatherForecast } from './fetchWeatherForecast';
 
 jest.mock('axios');
 
-describe('getWeatherForecast', () => {
+describe('fetchWeatherForecast', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-  it('should return weather forecast for a given zipcode', async () => {
+  it('should return weather forecast when the request is successful', async () => {
     const mockResponse = {
+      status: 200,
       data: {
-        location: { name: 'Los Angeles' },
-        current: { temp_c: 20, condition: { text: 'Sunny' } },
+        location: {
+          name: 'Test City',
+        },
+        current: {
+          temp_c: 20,
+          condition: {
+            text: 'Sunny',
+          },
+        },
       },
     };
 
     mockedAxios.get.mockResolvedValueOnce(mockResponse);
 
-    const expectedResponse = {
-      location: 'Los Angeles',
+    const result = await fetchWeatherForecast('12345');
+
+    expect(result).toEqual({
+      location: 'Test City',
       temperature: 20,
       condition: 'Sunny',
-    };
-
-    await expect(getWeatherForecast('90001')).resolves.toEqual(expectedResponse);
-    expect(mockedAxios.get).toHaveBeenCalledWith('https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=90001');
+    });
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=12345');
   });
 
   it('should throw an error when the request fails', async () => {
-    const error = new Error('Network error');
-    mockedAxios.get.mockRejectedValueOnce(error);
+    mockedAxios.get.mockRejectedValueOnce(new Error('Network error'));
 
-    await expect(getWeatherForecast('90001')).rejects.toThrow('Network error');
-    expect(mockedAxios.get).toHaveBeenCalledWith('https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=90001');
+    await expect(fetchWeatherForecast('12345')).rejects.toThrow('Failed to fetch the weather forecast.');
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=12345');
+  });
+
+  it('should throw an error when the response status is not 200', async () => {
+    const mockResponse = {
+      status: 404,
+      data: {},
+    };
+
+    mockedAxios.get.mockResolvedValueOnce(mockResponse);
+
+    await expect(fetchWeatherForecast('12345')).rejects.toThrow('Failed to fetch the weather forecast.');
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=12345');
   });
 });
 ```
