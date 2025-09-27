@@ -2,43 +2,56 @@
 import axios from 'axios';
 
 /**
- * Interface for the weather data response
+ * Interface for the weather data
  */
-interface WeatherData {
-  location: string;
+interface IWeatherData {
   temperature: number;
-  condition: string;
+  humidity: number;
+  description: string;
+}
+
+/**
+ * Interface for the response object
+ */
+interface IResponse {
+  success: boolean;
+  data?: IWeatherData;
+  message?: string;
 }
 
 /**
  * Fetches weather data for a given zip code.
- * 
- * @param zipCode - The zip code for which to fetch weather data.
- * @returns A Promise that resolves to the weather data.
- * @throws Will throw an error if the API request fails.
+ *
+ * @param {string} zipCode - The zip code.
+ * @returns {Promise<IResponse>} The weather data.
  */
-async function getWeatherData(zipCode: string): Promise<WeatherData> {
+async function getWeatherData(zipCode: string): Promise<IResponse> {
   try {
-    // For demonstration purposes, we are using a mock API URL.
-    const response = await axios.get(`https://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+    // Replace with your actual API endpoint and key
+    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
 
-    // Check if the response is valid
     if (response.status !== 200) {
-      throw new Error(`Unexpected response code: ${response.status}`);
+      return {
+        success: false,
+        message: 'Unable to fetch weather data',
+      };
     }
 
-    const data = response.data;
-
-    // Construct the weather data object
-    const weatherData: WeatherData = {
-      location: data.location.name,
-      temperature: data.current.temp_c,
-      condition: data.current.condition.text,
+    const weatherData: IWeatherData = {
+      temperature: response.data.current.temp_c,
+      humidity: response.data.current.humidity,
+      description: response.data.current.condition.text,
     };
 
-    return weatherData;
+    return {
+      success: true,
+      data: weatherData,
+    };
   } catch (error) {
-    throw new Error(`Failed to fetch weather data: ${error}`);
+    return {
+      success: false,
+      message: error.message,
+    };
   }
 }
 ```
