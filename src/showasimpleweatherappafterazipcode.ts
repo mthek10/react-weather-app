@@ -2,36 +2,53 @@
 import axios from 'axios';
 
 /**
- * Interface for the weather response data
+ * Interface for the response data from the weather API
  */
 interface IWeatherResponse {
+  main: {
+    temp: number;
+    feels_like: number;
+    temp_min: number;
+    temp_max: number;
+    pressure: number;
+    humidity: number;
+  };
+  weather: {
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }[];
+}
+
+/**
+ * Interface for the response object of the function
+ */
+interface IWeatherData {
   temperature: number;
-  humidity: number;
   description: string;
+  icon: string;
 }
 
 /**
  * Fetches weather data for a given zip code
  * @param {string} zipCode - The zip code to fetch weather data for
- * @returns {Promise<IWeatherResponse>} - The weather data
- * @throws {Error} - Throws an error if the request fails
+ * @returns {Promise<IWeatherData>} The weather data
+ * @throws {Error} When the API request fails
  */
-async function fetchWeatherData(zipCode: string): Promise<IWeatherResponse> {
+async function getWeatherData(zipCode: string): Promise<IWeatherData> {
   try {
-    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
-    const data = response.data;
+    const response = await axios.get<IWeatherResponse>(`http://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&appid=YOUR_API_KEY`);
 
     return {
-      temperature: data.current.temp_f,
-      humidity: data.current.humidity,
-      description: data.current.condition.text,
+      temperature: response.data.main.temp,
+      description: response.data.weather[0].description,
+      icon: response.data.weather[0].icon,
     };
   } catch (error) {
-    throw new Error(`Failed to fetch weather data: ${error.message}`);
+    throw new Error(`Failed to fetch weather data: ${error}`);
   }
 }
-
-export default fetchWeatherData;
 ```
 
-Please replace `YOUR_API_KEY` with your actual API key from weatherapi.com. This is a simple demonstration and does not include all the possible error handling and edge cases you might encounter in a real-world application.
+Please replace `YOUR_API_KEY` with your actual API key from OpenWeatherMap.

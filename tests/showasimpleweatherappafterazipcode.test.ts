@@ -1,43 +1,46 @@
 ```typescript
 import axios from 'axios';
-import fetchWeatherData from './fetchWeatherData';
+import { getWeatherData } from './getWeatherData';
 
 jest.mock('axios');
 
-describe('fetchWeatherData', () => {
+describe('getWeatherData', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-  it('should return weather data when request is successful', async () => {
-    const mockData = {
-      current: {
-        temp_f: 75,
-        humidity: 80,
-        condition: {
-          text: 'Partly cloudy',
+  it('returns weather data when API request is successful', async () => {
+    const mockResponse = {
+      data: {
+        main: {
+          temp: 280.32,
         },
+        weather: [
+          {
+            description: 'clear sky',
+            icon: '01d',
+          },
+        ],
       },
     };
 
-    mockedAxios.get.mockResolvedValue({ data: mockData });
+    mockedAxios.get.mockResolvedValue(mockResponse);
 
-    const result = await fetchWeatherData('90210');
+    const expected = {
+      temperature: 280.32,
+      description: 'clear sky',
+      icon: '01d',
+    };
 
-    expect(result).toEqual({
-      temperature: mockData.current.temp_f,
-      humidity: mockData.current.humidity,
-      description: mockData.current.condition.text,
-    });
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=90210');
+    await expect(getWeatherData('90210')).resolves.toEqual(expected);
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.openweathermap.org/data/2.5/weather?zip=90210,us&appid=YOUR_API_KEY');
   });
 
-  it('should throw an error when request fails', async () => {
-    const errorMessage = 'Network Error';
+  it('throws an error when API request fails', async () => {
+    const error = new Error('Network error');
 
-    mockedAxios.get.mockRejectedValue(new Error(errorMessage));
+    mockedAxios.get.mockRejectedValue(error);
 
-    await expect(fetchWeatherData('90210')).rejects.toThrow(`Failed to fetch weather data: ${errorMessage}`);
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=90210');
+    await expect(getWeatherData('90210')).rejects.toThrow('Failed to fetch weather data: Network error');
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.openweathermap.org/data/2.5/weather?zip=90210,us&appid=YOUR_API_KEY');
   });
 });
 ```
-This Jest test suite mocks the axios module and tests both successful and error cases for the `fetchWeatherData` function. It includes proper assertions and uses descriptive test names.
