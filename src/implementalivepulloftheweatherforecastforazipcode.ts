@@ -1,38 +1,37 @@
 ```typescript
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 /**
- * Interface for the weather forecast response
+ * Interface for the response object
  */
-interface IWeatherForecastResponse {
+interface IWeatherResponse {
   temperature: number;
-  humidity: number;
-  description: string;
+  condition: string;
+  location: string;
 }
 
 /**
- * Function to fetch the weather forecast for a given zipcode
- * @param {string} zipcode - The zipcode for which to fetch the weather forecast
- * @returns {Promise<IWeatherForecastResponse>} - The weather forecast for the given zipcode
- * @throws {Error} - Throws an error if the request fails
+ * Fetches the weather forecast for a given zipcode
+ * @param {string} zipcode - The zipcode to fetch the weather for
+ * @returns {Promise<IWeatherResponse>} The weather forecast
+ * @throws {Error} When there's an error fetching the weather
  */
-async function fetchWeatherForecast(zipcode: string): Promise<IWeatherForecastResponse> {
+async function fetchWeather(zipcode: string): Promise<IWeatherResponse> {
   try {
-    // Make a GET request to a hypothetical weather API
-    const response: AxiosResponse = await axios.get(`https://api.weather.com/v3/wx/forecast/daily/5day?postal_key=${zipcode}&format=json`);
+    // For demonstration purposes, we'll use a mock API endpoint
+    const response = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
 
-    // Extract the relevant data from the response
-    const { temperature, humidity, description } = response.data;
+    // Extract the necessary data from the response
+    const { temp_f: temperature, text: condition } = response.data.current;
+    const { name: location } = response.data.location;
 
     // Return the weather forecast
-    return {
-      temperature,
-      humidity,
-      description,
-    };
+    return { temperature, condition, location };
   } catch (error) {
-    // Throw an error if the request fails
-    throw new Error(`Failed to fetch the weather forecast for zipcode ${zipcode}: ${error}`);
+    // Basic error handling
+    console.error(`Error fetching weather for zipcode ${zipcode}: ${error}`);
+    throw new Error('Could not fetch weather');
   }
 }
 ```
+Please note that you need to replace `YOUR_API_KEY` with your actual API key from the weatherapi.com. This is a simple demonstration and does not include all possible error handling or data validation that a production application would require.
