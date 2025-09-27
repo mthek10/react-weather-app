@@ -4,34 +4,34 @@ import axios from 'axios';
 /**
  * Interface for the response object
  */
-interface IWeatherResponse {
+interface WeatherResponse {
   temperature: number;
-  condition: string;
-  location: string;
+  humidity: number;
+  description: string;
 }
 
 /**
- * Fetches the weather forecast for a given zipcode
- * @param {string} zipcode - The zipcode to fetch the weather for
- * @returns {Promise<IWeatherResponse>} The weather forecast
- * @throws {Error} When there's an error fetching the weather
+ * Fetches the weather forecast for a given zipcode.
+ *
+ * @param {string} zipcode - The zipcode for which to fetch the weather forecast.
+ * @returns {Promise<WeatherResponse>} The weather forecast for the given zipcode.
+ * @throws {Error} When the request fails.
  */
-async function fetchWeather(zipcode: string): Promise<IWeatherResponse> {
+async function fetchWeatherForecast(zipcode: string): Promise<WeatherResponse> {
   try {
-    // For demonstration purposes, we'll use a mock API endpoint
-    const response = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
+    // Replace with your actual API endpoint and key
+    const response = await axios.get(`http://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
 
-    // Extract the necessary data from the response
-    const { temp_f: temperature, text: condition } = response.data.current;
-    const { name: location } = response.data.location;
+    if (response.status !== 200) {
+      throw new Error(`Unexpected response code: ${response.status}`);
+    }
 
-    // Return the weather forecast
-    return { temperature, condition, location };
+    const { temp_c: temperature, humidity } = response.data.current;
+    const { text: description } = response.data.current.condition;
+
+    return { temperature, humidity, description };
   } catch (error) {
-    // Basic error handling
-    console.error(`Error fetching weather for zipcode ${zipcode}: ${error}`);
-    throw new Error('Could not fetch weather');
+    throw new Error(`Failed to fetch weather forecast: ${error.message}`);
   }
 }
 ```
-Please note that you need to replace `YOUR_API_KEY` with your actual API key from the weatherapi.com. This is a simple demonstration and does not include all possible error handling or data validation that a production application would require.
