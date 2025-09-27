@@ -1,53 +1,49 @@
 ```typescript
-import { WeatherService, WeatherPopup } from './weather';
+import axios from 'axios';
+import { fetchWeather } from './weather'; // Assuming the function is exported from a file named weather.ts
 
-// Mock fetch
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({ weather: 'sunny' }),
-  })
-);
+jest.mock('axios');
 
-describe('WeatherService', () => {
-  let weatherService: WeatherService;
-
-  beforeEach(() => {
-    weatherService = new WeatherService('http://api.openweathermap.org/data/2.5/weather', 'your_api_key');
-  });
+describe('fetchWeather', () => {
+  const mockedAxios = axios as jest.Mocked<typeof axios>;
 
   it('should fetch weather data successfully', async () => {
-    const data = await weatherService.getWeatherByZipCode('12345');
-    expect(data).toEqual({ success: true, data: { weather: 'sunny' } });
+    const mockData = {
+      location: {
+        name: 'New York',
+      },
+      current: {
+        condition: {
+          text: 'Sunny',
+        },
+        temp_c: 20,
+      },
+    };
+
+    mockedAxios.get.mockResolvedValueOnce({ data: mockData });
+
+    const result = await fetchWeather('10001');
+
+    expect(result).toEqual({
+      location: 'New York',
+      description: 'Sunny',
+      temperature: 20,
+    });
+
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=10001');
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle network errors', async () => {
-    (fetch as jest.Mock).mockImplementationOnce(() => Promise.resolve({ ok: false }));
-    const data = await weatherService.getWeatherByZipCode('12345');
-    expect(data).toEqual({ success: false, message: 'Network response was not ok' });
-  });
-});
+  it('should throw an error when the request fails', async () => {
+    const errorMessage = 'Network Error';
 
-describe('WeatherPopup', () => {
-  let weatherService: WeatherService;
-  let weatherPopup: WeatherPopup;
+    mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
 
-  beforeEach(() => {
-    weatherService = new WeatherService('http://api.openweathermap.org/data/2.5/weather', 'your_api_key');
-    weatherPopup = new WeatherPopup(weatherService);
-    jest.spyOn(window, 'prompt').mockImplementation(() => '12345');
-  });
+    await expect(fetchWeather('10001')).rejects.toThrow(`Failed to fetch weather for zip code 10001: ${errorMessage}`);
 
-  it('should show weather data successfully', async () => {
-    const data = await weatherPopup.show();
-    expect(data).toEqual({ success: true, data: { weather: 'sunny' } });
-  });
-
-  it('should handle no zip code provided', async () => {
-    (window.prompt as jest.Mock).mockImplementationOnce(() => '');
-    const data = await weatherPopup.show();
-    expect(data).toEqual({ success: false, message: 'No zip code provided' });
+    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=10001');
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
   });
 });
 ```
-This test code mocks the global fetch function and window.prompt function to simulate different scenarios. It tests both the WeatherService and WeatherPopup classes, checking that they handle both success and error cases correctly.
+Please replace `YOUR_API_KEY` with your actual API key from weatherapi.com.

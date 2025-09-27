@@ -1,70 +1,34 @@
 ```typescript
+import axios from 'axios';
+
 /**
- * WeatherService class to fetch weather data
+ * @typedef {Object} WeatherResponse
+ * @property {string} location - The location of the weather report.
+ * @property {string} description - The description of the weather.
+ * @property {number} temperature - The current temperature.
  */
-class WeatherService {
-  private apiEndpoint: string;
-  private apiKey: string;
 
-  constructor(apiEndpoint: string, apiKey: string) {
-    this.apiEndpoint = apiEndpoint;
-    this.apiKey = apiKey;
-  }
-
-  /**
-   * Fetch weather data for a specific zip code
-   * @param {string} zipCode - The zip code to fetch weather data for
-   * @returns {Promise<any>} The weather data
-   */
-  async getWeatherByZipCode(zipCode: string): Promise<any> {
+/**
+ * Fetches the weather for a given zip code.
+ *
+ * @param {string} zipCode - The zip code to fetch the weather for.
+ * @returns {Promise<WeatherResponse>} The weather response.
+ * @throws {Error} When there's an error fetching the weather.
+ */
+async function fetchWeather(zipCode: string): Promise<WeatherResponse> {
     try {
-      const response = await fetch(`${this.apiEndpoint}?zip=${zipCode}&appid=${this.apiKey}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const weatherData = await response.json();
-      return {
-        success: true,
-        data: weatherData
-      };
+        const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+        const data = response.data;
+
+        return {
+            location: data.location.name,
+            description: data.current.condition.text,
+            temperature: data.current.temp_c,
+        };
     } catch (error) {
-      return {
-        success: false,
-        message: error.message
-      };
+        throw new Error(`Failed to fetch weather for zip code ${zipCode}: ${error.message}`);
     }
-  }
 }
-
-/**
- * Popup to get user's zip code and show weather data
- */
-class WeatherPopup {
-  private weatherService: WeatherService;
-
-  constructor(weatherService: WeatherService) {
-    this.weatherService = weatherService;
-  }
-
-  /**
-   * Show popup to get user's zip code and fetch weather data
-   * @returns {Promise<any>} The weather data
-   */
-  async show(): Promise<any> {
-    const zipCode = window.prompt('Please enter your zip code:');
-    if (!zipCode) {
-      return {
-        success: false,
-        message: 'No zip code provided'
-      };
-    }
-    return this.weatherService.getWeatherByZipCode(zipCode);
-  }
-}
-
-// Usage
-const weatherService = new WeatherService('http://api.openweathermap.org/data/2.5/weather', 'your_api_key');
-const weatherPopup = new WeatherPopup(weatherService);
-weatherPopup.show().then(console.log);
 ```
-Please note that this code is for demonstration purposes and might not work in a real-world application without modifications. For example, the OpenWeatherMap API requires an API key which is not included in this code.
+
+Please replace `YOUR_API_KEY` with your actual API key from weatherapi.com. This function fetches the current weather for a given zip code using the weatherapi.com API, and returns an object containing the location name, weather description, and current temperature in Celsius. If there's an error fetching the weather, it throws an error with a descriptive message.
