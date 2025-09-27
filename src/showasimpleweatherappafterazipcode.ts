@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 /**
- * Interface for the weather data
+ * Interface for the weather data response
  */
 interface IWeatherData {
   temperature: number;
@@ -11,30 +11,17 @@ interface IWeatherData {
 }
 
 /**
- * Interface for the response object
+ * Function to fetch weather data for a given zip code
+ * @param zipCode - The zip code for which to fetch the weather data
+ * @returns A Promise that resolves to an object containing the weather data
  */
-interface IResponse {
-  success: boolean;
-  data?: IWeatherData;
-  message?: string;
-}
-
-/**
- * Fetches weather data for a given zip code.
- *
- * @param {string} zipCode - The zip code.
- * @returns {Promise<IResponse>} The weather data.
- */
-async function getWeatherData(zipCode: string): Promise<IResponse> {
+async function getWeatherData(zipCode: string): Promise<IWeatherData> {
   try {
-    // Replace with your actual API endpoint and key
-    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+    // Here we're using a mock API URL, replace with a real weather API endpoint
+    const response = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipCode}`);
 
     if (response.status !== 200) {
-      return {
-        success: false,
-        message: 'Unable to fetch weather data',
-      };
+      throw new Error(`Unexpected response code: ${response.status}`);
     }
 
     const weatherData: IWeatherData = {
@@ -43,15 +30,10 @@ async function getWeatherData(zipCode: string): Promise<IResponse> {
       description: response.data.current.condition.text,
     };
 
-    return {
-      success: true,
-      data: weatherData,
-    };
+    return weatherData;
   } catch (error) {
-    return {
-      success: false,
-      message: error.message,
-    };
+    throw new Error(`Failed to fetch weather data: ${error.message}`);
   }
 }
 ```
+Please note that you'll need to replace `YOUR_API_KEY` with your actual API key from the weather API service you're using. The structure of the response object and the endpoints may also vary depending on the weather API service.
