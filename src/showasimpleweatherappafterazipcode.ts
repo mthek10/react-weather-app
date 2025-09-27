@@ -2,53 +2,39 @@
 import axios from 'axios';
 
 /**
- * Interface for the response data from the weather API
- */
-interface IWeatherResponse {
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    pressure: number;
-    humidity: number;
-  };
-  weather: {
-    id: number;
-    main: string;
-    description: string;
-    icon: string;
-  }[];
-}
-
-/**
- * Interface for the response object of the function
+ * Interface for the weather data response
  */
 interface IWeatherData {
   temperature: number;
-  description: string;
-  icon: string;
+  humidity: number;
+  windSpeed: number;
 }
 
 /**
  * Fetches weather data for a given zip code
  * @param {string} zipCode - The zip code to fetch weather data for
  * @returns {Promise<IWeatherData>} The weather data
- * @throws {Error} When the API request fails
+ * @throws {Error} When an error occurs during the fetch
  */
-async function getWeatherData(zipCode: string): Promise<IWeatherData> {
+async function fetchWeatherData(zipCode: string): Promise<IWeatherData> {
   try {
-    const response = await axios.get<IWeatherResponse>(`http://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&appid=YOUR_API_KEY`);
+    // Replace with your actual API endpoint and key
+    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
 
-    return {
-      temperature: response.data.main.temp,
-      description: response.data.weather[0].description,
-      icon: response.data.weather[0].icon,
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+    }
+
+    const weatherData: IWeatherData = {
+      temperature: response.data.current.temp_c,
+      humidity: response.data.current.humidity,
+      windSpeed: response.data.current.wind_kph,
     };
+
+    return weatherData;
   } catch (error) {
-    throw new Error(`Failed to fetch weather data: ${error}`);
+    throw new Error(`Failed to fetch weather data: ${error.message}`);
   }
 }
 ```
-
-Please replace `YOUR_API_KEY` with your actual API key from OpenWeatherMap.
+Note: This code assumes that you are using the WeatherAPI service and axios for making HTTP requests. Replace the API endpoint and key with your actual values.
