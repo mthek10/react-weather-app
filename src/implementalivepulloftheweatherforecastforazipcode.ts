@@ -1,37 +1,42 @@
 ```typescript
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 /**
- * Interface for the response object
+ * @interface WeatherResponse
+ * @description Interface for the weather response object
  */
 interface WeatherResponse {
+  location: string;
   temperature: number;
-  humidity: number;
-  description: string;
+  condition: string;
 }
 
 /**
- * Fetches the weather forecast for a given zipcode.
- *
- * @param {string} zipcode - The zipcode for which to fetch the weather forecast.
- * @returns {Promise<WeatherResponse>} The weather forecast for the given zipcode.
- * @throws {Error} When the request fails.
+ * @function getWeatherForecast
+ * @description Fetches the weather forecast for a given zipcode
+ * @param {string} zipcode - The zipcode for which to fetch the weather forecast
+ * @returns {Promise<WeatherResponse>} The weather forecast for the given zipcode
  */
-async function fetchWeatherForecast(zipcode: string): Promise<WeatherResponse> {
+async function getWeatherForecast(zipcode: string): Promise<WeatherResponse> {
   try {
-    // Replace with your actual API endpoint and key
-    const response = await axios.get(`http://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
+    // Make a GET request to a hypothetical weather API
+    const response: AxiosResponse = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipcode}`);
 
-    if (response.status !== 200) {
-      throw new Error(`Unexpected response code: ${response.status}`);
-    }
+    // Extract the necessary data from the response
+    const { location, current } = response.data;
 
-    const { temp_c: temperature, humidity } = response.data.current;
-    const { text: description } = response.data.current.condition;
+    // Construct the response object
+    const weatherResponse: WeatherResponse = {
+      location: location.name,
+      temperature: current.temp_c,
+      condition: current.condition.text,
+    };
 
-    return { temperature, humidity, description };
+    return weatherResponse;
   } catch (error) {
-    throw new Error(`Failed to fetch weather forecast: ${error.message}`);
+    // Basic error handling
+    console.error(`Failed to fetch weather forecast for zipcode ${zipcode}: `, error);
+    throw error;
   }
 }
 ```
