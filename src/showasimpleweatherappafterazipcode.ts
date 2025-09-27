@@ -1,39 +1,44 @@
 ```typescript
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 /**
- * @typedef {Object} WeatherResponse
- * @property {string} location - The location for which the weather data is provided.
- * @property {number} temperature - The current temperature in the location.
- * @property {string} condition - The current weather condition in the location.
+ * Interface for the weather data response
  */
+interface IWeatherData {
+  temperature: number;
+  humidity: number;
+  description: string;
+}
 
 /**
- * Fetches weather data for a given zip code.
- * 
- * @param {string} zipCode - The zip code for which to fetch the weather data.
- * @returns {Promise<WeatherResponse>} The weather data for the given zip code.
- * @throws {Error} Will throw an error if the request fails or if the zip code is invalid.
+ * Function to fetch weather data based on zip code
+ * @param {string} zipCode - The zip code for the location
+ * @returns {Promise<IWeatherData>} - A promise that resolves to the weather data
  */
-async function getWeatherByZipCode(zipCode: string): Promise<WeatherResponse> {
-    if (!zipCode || zipCode.length !== 5 || isNaN(Number(zipCode))) {
-        throw new Error('Invalid zip code.');
+async function fetchWeatherData(zipCode: string): Promise<IWeatherData> {
+  try {
+    // Replace with your actual weather API endpoint and API key
+    const response: AxiosResponse = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+
+    // Check if the response is successful
+    if (response.status !== 200) {
+      throw new Error(`Error: Received status code ${response.status}`);
     }
 
-    try {
-        const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
-        const data = response.data;
+    // Extract the required data from the response
+    const data = response.data;
+    const weatherData: IWeatherData = {
+      temperature: data.current.temp_c,
+      humidity: data.current.humidity,
+      description: data.current.condition.text,
+    };
 
-        const weatherResponse: WeatherResponse = {
-            location: data.location.name,
-            temperature: data.current.temp_f,
-            condition: data.current.condition.text
-        };
-
-        return weatherResponse;
-    } catch (error) {
-        throw new Error('Failed to fetch weather data.');
-    }
+    return weatherData;
+  } catch (error) {
+    console.error(`Failed to fetch weather data: ${error}`);
+    throw error;
+  }
 }
 ```
-Please replace `YOUR_API_KEY` with your actual API key. This function uses the WeatherAPI service to fetch weather data. You need to sign up for a free API key from their website. The API key is used to authenticate your requests.
+
+Please note that you need to replace `YOUR_API_KEY` with your actual API key from the weather API provider. The URL and the way of accessing the data (`data.current.temp_c`, `data.current.humidity`, `data.current.condition.text`) are based on the WeatherAPI (https://www.weatherapi.com/). If you are using a different API, you need to adjust the URL and the way of accessing the data accordingly.
