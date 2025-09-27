@@ -1,44 +1,37 @@
 ```typescript
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 /**
- * Interface for the weather data response
+ * Interface for the weather response data
  */
-interface IWeatherData {
+interface IWeatherResponse {
   temperature: number;
   humidity: number;
   description: string;
 }
 
 /**
- * Function to fetch weather data based on zip code
- * @param {string} zipCode - The zip code for the location
- * @returns {Promise<IWeatherData>} - A promise that resolves to the weather data
+ * Fetches weather data for a given zip code
+ * @param {string} zipCode - The zip code to fetch weather data for
+ * @returns {Promise<IWeatherResponse>} - The weather data
+ * @throws {Error} - Throws an error if the request fails
  */
-async function fetchWeatherData(zipCode: string): Promise<IWeatherData> {
+async function fetchWeatherData(zipCode: string): Promise<IWeatherResponse> {
   try {
-    // Replace with your actual weather API endpoint and API key
-    const response: AxiosResponse = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
-
-    // Check if the response is successful
-    if (response.status !== 200) {
-      throw new Error(`Error: Received status code ${response.status}`);
-    }
-
-    // Extract the required data from the response
+    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
     const data = response.data;
-    const weatherData: IWeatherData = {
-      temperature: data.current.temp_c,
+
+    return {
+      temperature: data.current.temp_f,
       humidity: data.current.humidity,
       description: data.current.condition.text,
     };
-
-    return weatherData;
   } catch (error) {
-    console.error(`Failed to fetch weather data: ${error}`);
-    throw error;
+    throw new Error(`Failed to fetch weather data: ${error.message}`);
   }
 }
+
+export default fetchWeatherData;
 ```
 
-Please note that you need to replace `YOUR_API_KEY` with your actual API key from the weather API provider. The URL and the way of accessing the data (`data.current.temp_c`, `data.current.humidity`, `data.current.condition.text`) are based on the WeatherAPI (https://www.weatherapi.com/). If you are using a different API, you need to adjust the URL and the way of accessing the data accordingly.
+Please replace `YOUR_API_KEY` with your actual API key from weatherapi.com. This is a simple demonstration and does not include all the possible error handling and edge cases you might encounter in a real-world application.
