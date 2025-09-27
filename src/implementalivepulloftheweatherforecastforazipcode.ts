@@ -1,62 +1,38 @@
 ```typescript
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 /**
- * Interface for the response data from the weather API
+ * Interface for the weather forecast response
  */
-interface IWeatherResponse {
-  location: {
-    name: string;
-    region: string;
-    country: string;
-    lat: number;
-    lon: number;
-    tz_id: string;
-    localtime_epoch: number;
-    localtime: string;
-  };
-  current: {
-    temp_c: number;
-    temp_f: number;
-    is_day: boolean;
-    condition: {
-      text: string;
-      icon: string;
-      code: number;
-    };
-    wind_mph: number;
-    wind_kph: number;
-    wind_degree: number;
-    wind_dir: string;
-    pressure_mb: number;
-    pressure_in: number;
-    precip_mm: number;
-    precip_in: number;
-    humidity: number;
-    cloud: number;
-    feelslike_c: number;
-    feelslike_f: number;
-    vis_km: number;
-    vis_miles: number;
-    uv: number;
-    gust_mph: number;
-    gust_kph: number;
-  };
+interface IWeatherForecastResponse {
+  temperature: number;
+  humidity: number;
+  description: string;
 }
 
 /**
- * Fetches the weather forecast for a given zipcode.
- * @param {string} zipcode - The zipcode to fetch the weather forecast for.
- * @returns {Promise<IWeatherResponse>} The weather forecast data.
+ * Function to fetch the weather forecast for a given zipcode
+ * @param {string} zipcode - The zipcode for which to fetch the weather forecast
+ * @returns {Promise<IWeatherForecastResponse>} - The weather forecast for the given zipcode
+ * @throws {Error} - Throws an error if the request fails
  */
-async function fetchWeatherForecast(zipcode: string): Promise<IWeatherResponse> {
+async function fetchWeatherForecast(zipcode: string): Promise<IWeatherForecastResponse> {
   try {
-    // Replace 'your-api-key' with your actual API key
-    const response = await axios.get<IWeatherResponse>(`http://api.weatherapi.com/v1/current.json?key=your-api-key&q=${zipcode}`);
-    return response.data;
+    // Make a GET request to a hypothetical weather API
+    const response: AxiosResponse = await axios.get(`https://api.weather.com/v3/wx/forecast/daily/5day?postal_key=${zipcode}&format=json`);
+
+    // Extract the relevant data from the response
+    const { temperature, humidity, description } = response.data;
+
+    // Return the weather forecast
+    return {
+      temperature,
+      humidity,
+      description,
+    };
   } catch (error) {
-    console.error(`Failed to fetch weather forecast for zipcode: ${zipcode}`, error);
-    throw error;
+    // Throw an error if the request fails
+    throw new Error(`Failed to fetch the weather forecast for zipcode ${zipcode}: ${error}`);
   }
 }
 ```
