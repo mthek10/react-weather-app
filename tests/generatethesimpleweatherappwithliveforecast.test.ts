@@ -1,54 +1,43 @@
 ```typescript
 import axios from 'axios';
-import { getWeatherForecast } from './weather'; // Assuming the function is exported from a file named weather.ts
+import { getWeatherForecast, IWeatherResponse } from './weatherService';
 
 jest.mock('axios');
 
 describe('getWeatherForecast', () => {
   const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-  it('returns the weather forecast for a given zip code', async () => {
-    const mockResponse = {
-      status: 200,
-      data: {
-        location: { name: 'San Francisco' },
-        current: { condition: { text: 'Sunny' }, temp_c: 20 },
-      },
-    };
-
-    mockedAxios.get.mockResolvedValueOnce(mockResponse);
-
-    const result = await getWeatherForecast('94101');
-
-    expect(result).toEqual({
-      location: 'San Francisco',
-      description: 'Sunny',
+  it('returns weather data when request is successful', async () => {
+    const data: IWeatherResponse = {
+      location: 'New York',
       temperature: 20,
-    });
-
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=94101');
-  });
-
-  it('throws an error when the API request fails', async () => {
-    const mockResponse = {
-      status: 500,
-      data: {},
+      condition: 'Sunny',
     };
 
-    mockedAxios.get.mockResolvedValueOnce(mockResponse);
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data });
 
-    await expect(getWeatherForecast('94101')).rejects.toThrow('Failed to fetch weather forecast');
+    const result = await getWeatherForecast('10001');
 
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=94101');
+    expect(result).toEqual(data);
+    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=10001`);
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
   });
 
-  it('throws an error when the API request throws an exception', async () => {
-    mockedAxios.get.mockRejectedValueOnce(new Error('Network error'));
+  it('throws an error when the response status is not 200', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 404 });
 
-    await expect(getWeatherForecast('94101')).rejects.toThrow('Network error');
+    await expect(getWeatherForecast('10001')).rejects.toThrow('Failed to fetch weather data');
+    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=10001`);
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+  });
 
-    expect(mockedAxios.get).toHaveBeenCalledWith('http://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=94101');
+  it('throws an error when the request fails', async () => {
+    mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
+
+    await expect(getWeatherForecast('10001')).rejects.toThrow('Network Error');
+    expect(mockedAxios.get).toHaveBeenCalledWith(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=10001`);
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
   });
 });
 ```
-Please replace `YOUR_API_KEY` with your actual API key. This test assumes that you are using the WeatherAPI service. If you are using a different service, you may need to adjust the URL and the way you extract data from the mock response.
+Please replace `YOUR_API_KEY` with your actual API key from the weather API service. Also, the structure of the response object and the endpoint URL are based on the WeatherAPI service. If you are using a different API service, you may need to adjust these accordingly.
