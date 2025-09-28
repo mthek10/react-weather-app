@@ -2,39 +2,40 @@
 import axios from 'axios';
 
 /**
- * Interface for the weather data response
+ * Interface for the response object
  */
-interface IWeatherData {
+interface IWeatherResponse {
+  location: string;
   temperature: number;
-  humidity: number;
-  windSpeed: number;
+  condition: string;
 }
 
 /**
- * Fetches weather data for a given zip code
- * @param {string} zipCode - The zip code to fetch weather data for
- * @returns {Promise<IWeatherData>} The weather data
- * @throws {Error} When an error occurs during the fetch
+ * Fetches weather data for the provided zip code.
+ * @param {string} zipCode - The zip code for which to fetch weather data.
+ * @returns {Promise<IWeatherResponse>} - A promise that resolves to the weather data.
+ * @throws {Error} - Throws an error if the request fails.
  */
-async function fetchWeatherData(zipCode: string): Promise<IWeatherData> {
+async function getWeatherByZipCode(zipCode: string): Promise<IWeatherResponse> {
   try {
     // Replace with your actual API endpoint and key
     const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
 
     if (response.status !== 200) {
-      throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+      throw new Error(`Unexpected response code: ${response.status}`);
     }
 
-    const weatherData: IWeatherData = {
-      temperature: response.data.current.temp_c,
-      humidity: response.data.current.humidity,
-      windSpeed: response.data.current.wind_kph,
+    const data = response.data;
+
+    const weatherResponse: IWeatherResponse = {
+      location: data.location.name,
+      temperature: data.current.temp_c,
+      condition: data.current.condition.text,
     };
 
-    return weatherData;
+    return weatherResponse;
   } catch (error) {
     throw new Error(`Failed to fetch weather data: ${error.message}`);
   }
 }
 ```
-Note: This code assumes that you are using the WeatherAPI service and axios for making HTTP requests. Replace the API endpoint and key with your actual values.
