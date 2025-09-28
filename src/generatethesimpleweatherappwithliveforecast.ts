@@ -1,36 +1,42 @@
 ```typescript
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 /**
  * @typedef WeatherResponse
- * @property {string} location - The location of the forecast
- * @property {string} forecast - The weather forecast
+ * @property {string} location
+ * @property {string} description
+ * @property {number} temperature
  */
 
 /**
- * Fetches the weather forecast for a given zip code.
- *
- * @param {string} zipCode - The zip code to fetch the weather for
- * @returns {Promise<WeatherResponse>} The weather forecast
- * @throws {Error} When an error occurs during the API call
+ * Fetches weather forecast data from a given zip code.
+ * @param {string} zipCode - The zip code to fetch weather data for.
+ * @returns {Promise<WeatherResponse>} The weather data for the given zip code.
+ * @throws {Error} When the API request fails.
  */
 async function fetchWeatherForecast(zipCode: string): Promise<WeatherResponse> {
-    try {
-        const response = await axios.get(`https://api.weatherapi.com/v1/forecast.json?key=YOUR_API_KEY&q=${zipCode}`);
-        const data = response.data;
+  try {
+    // Replace with your actual API key
+    const API_KEY = 'YOUR_API_KEY';
+    const response: AxiosResponse = await axios.get(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${zipCode}`);
 
-        if (response.status !== 200) {
-            throw new Error(`Unexpected response code: ${response.status}`);
-        }
-
-        return {
-            location: data.location.name,
-            forecast: data.forecast.forecastday[0].day.condition.text,
-        };
-    } catch (error) {
-        throw new Error(`Failed to fetch weather forecast: ${error.message}`);
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch weather data');
     }
+
+    const { location, current } = response.data;
+
+    const weatherData: WeatherResponse = {
+      location: location.name,
+      description: current.condition.text,
+      temperature: current.temp_c,
+    };
+
+    return weatherData;
+  } catch (error) {
+    throw new Error(`Failed to fetch weather data: ${error.message}`);
+  }
 }
 ```
 
-Please replace `YOUR_API_KEY` with your actual API key from the weather API. This code uses the WeatherAPI service, but you can replace it with any other weather API service you prefer.
+Please note that this is a simple demonstration of how you might structure a function to fetch weather data in TypeScript. In a real-world application, you would likely need to handle more edge cases and provide more detailed error handling. Also, you would need to replace `'YOUR_API_KEY'` with your actual API key from the weather API.
