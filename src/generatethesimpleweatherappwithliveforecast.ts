@@ -2,32 +2,40 @@
 import axios from 'axios';
 
 /**
- * @typedef {Object} WeatherResponse
- * @property {string} location - The location of the weather forecast.
- * @property {number} temperature - The current temperature.
- * @property {string} condition - The current weather condition.
+ * Interface for the weather response
  */
+interface IWeatherResponse {
+  temperature: number;
+  humidity: number;
+  description: string;
+}
 
 /**
- * Fetches the live forecast for a given zip code.
- * @param {string} zipCode - The zip code to fetch the weather for.
- * @returns {Promise<WeatherResponse>} The weather forecast.
- * @throws {Error} If there is an error fetching the weather.
+ * Fetches the weather forecast for a given zip code
+ * @param {string} zipCode - The zip code to fetch the weather for
+ * @returns {Promise<IWeatherResponse>} The weather response
+ * @throws {Error} If the API request fails
  */
-async function fetchWeather(zipCode: string): Promise<WeatherResponse> {
-    try {
-        const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
-        const data = response.data;
+async function fetchWeatherForecast(zipCode: string): Promise<IWeatherResponse> {
+  try {
+    const response = await axios.get(`http://api.weatherapi.com/v1/current.json?key=YOUR_API_KEY&q=${zipCode}`);
+    const data = response.data;
 
-        return {
-            location: data.location.name,
-            temperature: data.current.temp_f,
-            condition: data.current.condition.text
-        };
-    } catch (error) {
-        throw new Error(`Failed to fetch weather: ${error.message}`);
+    if (!data || !data.current) {
+      throw new Error('Invalid API response');
     }
+
+    const weatherResponse: IWeatherResponse = {
+      temperature: data.current.temp_c,
+      humidity: data.current.humidity,
+      description: data.current.condition.text,
+    };
+
+    return weatherResponse;
+  } catch (error) {
+    throw new Error(`Failed to fetch weather: ${error.message}`);
+  }
 }
 ```
 
-Please replace `YOUR_API_KEY` with your actual API key from WeatherAPI. This function fetches the current weather for a given zip code by making a GET request to the WeatherAPI. It then returns an object containing the location, current temperature, and weather condition. If there is an error fetching the weather, it throws an error with a message detailing what went wrong.
+Please replace `YOUR_API_KEY` with your actual API key from weatherapi.com. This function fetches the current weather for a given zip code using the WeatherAPI. It returns an object with the current temperature (in Celsius), humidity (in percentage), and a text description of the current weather condition. If the API request fails for any reason, the function throws an error.
